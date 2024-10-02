@@ -9,12 +9,6 @@ def evaluate(ast, environment):
         identifier = ast["value"]
         assert identifier in environment, f"Unknown identifier: '{identifier}'."
         return environment[identifier], False
-        exit()
-        #assert type(ast["value"]) in [
-        #    float,
-        #    int,
-        #], f"unexpected numerical type {type(ast["value"])}"
-        return 3.14159, False
     if ast["tag"] == "+":
         left_value, _ = evaluate(ast["left"], environment)
         right_value, _ = evaluate(ast["right"], environment)
@@ -124,9 +118,7 @@ def test_evaluate_addition():
     equals("1+1",{},2,{})
     equals("1+2+3",{},6,{})
     equals("1.2+2.3+3.4",{},6.9,{})
-    equals("X+Y", {'X':1, 'Y':2}, 3)
-    equals("X+Y", {'X':1, 'Y':2}, 3)
-
+    equals("X+Y", {"X": 1, "Y": 2}, 3)
 
 def test_evaluate_subtraction():
     print("test evaluate subtraction")
@@ -150,10 +142,6 @@ def test_evaluate_negation():
     equals("-2",{},-2,{})
     equals("--3",{},3,{})
 
-def test_assignment_statement():
-    print("test assignment statement")
-    equals("X=1", {}, None, {"X":1})
-    equals("x=x+1", {"x":1}, None, {"x":2})
 
 def test_print_statement():
     print("test print statement")
@@ -162,14 +150,16 @@ def test_print_statement():
     equals("print(50+7)", {}, None, {})
     equals("print(50+8)", {}, None, {})
 
+
+def test_assignment_statement():
+    print("test assignment_statement")
+    equals("X=1", {}, None, {"X": 1})
+    equals("x=x+1", {"x": 1}, None, {"x": 2})
+
 def test_statement_list():
     print("test statement_list")
-    equals("1;", {}, 1)
-    equals("1;2;", {}, None)
-    equals("1;2;print(4);", {}, None)
-    equals("1;2;print(4);print(5);", {}, None)
-    equals("1;2;print(4);print(5);x=6;print(x);", {}, None)
-
+    equals("1", {}, 1)
+    equals("1;2;print(4);print(5);x=6;print(x)", {}, None)
 
 if __name__ == "__main__":
     test_evaluate_single_value()

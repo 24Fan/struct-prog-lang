@@ -29,7 +29,7 @@ patterns = [
     ["function", "function"],
     ["return", "return"],
     ["(\\d+\\.\\d*)|(\\d*\\.\\d+)|(\\d+)", "number"],
-    ["[A-Za-z_][A-Za-z0-9_]*","identifier"],
+    ["[A-Za-z_][A-Za-z0-9_]*", "identifier"],
     ["\\&\\&", "&&"],
     ["\\|\\|", "||"],
     ["!", "!"],
