@@ -4,10 +4,11 @@ parser.py -- implement parser for simple expressions
 Accept a string of tokens, return an AST expressed as stack of dictionaries
 """
 """
-    simple_expression = number | identifier | "(" expression ")" | "-" simple_expression
+    simple_expression = number | identifier [ "(" argument_list ")" ] | "(" expression ")" | "-" simple_expression
+    argument_list = [ expression { "," expression } ]
     factor = simple_expression
-    term = factor { "*"|"/" factor }
-    arithmetic_expression = term { "+"|"-" term }
+    term = factor { "*" | "/" factor }
+    arithmetic_expression = term { "+" | "-" term }
     comparison_expression == arithmetic_expression [ "==" | "!=" | "<" | ">" | "<=" | ">="  arithmetic expression ]
     boolean_term == comparison_expression { "&&" comparison_expression }
     boolean_expression == boolean_term { "||" boolean_term }
@@ -16,12 +17,17 @@ Accept a string of tokens, return an AST expressed as stack of dictionaries
     if_statement = "if" "(" boolean_expression ")" statement { "else" statement }
     while_statement = "while" "(" boolean_expression ")" statement
     assignment_statement = expression
+    # parameter = identifier [ "=" expression ]
+    # parameter_list = [ identifier { "," identifier } ]
+    parameter_list = [ identifier { "," identifier } ]
+    function_statement = "function" identifier "(" parameter_list ")" "{" statement_list "}"
     statement = print_statement |
                 if_statement |
                 while_statement |
-                "{" statement_list "}"
+                function_statement |
+                "{" statement_list "}" |
                 assignment_expression
-    statement_list = statement { ";" statement } {";"}
+    statement_list = [ statement { ";" statement } {";"} ]
     program = statement_list
 """
 
@@ -29,14 +35,33 @@ from pprint import pprint
 
 from tokenizer import tokenize
 
+def parse_argument_list(tokens):
+    arguments = []
+    while tokens[0]["tag"] != ")":
+        expression, tokens = parse_expression(tokens)
+        arguments.append(expression)
+        assert tokens[0]["tag"] in [",",")"]", "Expected ',' or ')'"
+        tokens = tokens[1:]
+    return arguments, tokens
+
+
 def parse_simple_expression(tokens):
     """
-    simple_expression = number | identifier | "(" expression ")" | "-" simple_expression
+    simple_expression = number | identifier [ "(" argument_list ")" ] | "(" expression ")" | "-" simple_expression
     """
     if tokens[0]["tag"] == "number":
         return tokens[0], tokens[1:]
     if tokens[0]["tag"] == "identifier":
-        return tokens[0], tokens[1:]
+        identifier = tokens[0]
+        tokens = tokens[1:]
+        if tokens[0] == "("
+            arguments, tokens = parse_argument_list(tokens[1:])
+            assert tokens[0]["tag"] == ")", "Error: expected ')'"
+            tokens = tokens[1:]
+            node = identifier
+            node["arguments"] = arguments
+            return node, tokens
+        return identifier, tokens
     if tokens[0]["tag"] == "(":
         node, tokens = parse_expression(tokens[1:])
         assert tokens[0]["tag"] == ")", "Error: expected ')'"
@@ -49,7 +74,7 @@ def parse_simple_expression(tokens):
 
 def test_parse_simple_expression():
     """
-    simple_expression = number | identifier | "(" expression ")" | "-" simple_expression
+    simple_expression = number | identifier [ "(" argument_list ")" ] | "(" expression ")" | "-" simple_expression
     """
     print("testing parse_simple_expression")
     tokens = tokenize("2")
@@ -61,6 +86,12 @@ def test_parse_simple_expression():
     assert ast["tag"] == "identifier"
     assert ast["value"] == "X"
     # pprint(ast)
+    tokens = tokenize("X()")
+    ast, tokens = parse_simple_expression(tokens)
+    # assert ast["tag"] == "identifier"
+    # assert ast["value"] == "X"
+    pprint(ast)
+    exit(0)
     tokens = tokenize("(2)")
     ast, tokens = parse_simple_expression(tokens)
     assert ast["tag"] == "number"
